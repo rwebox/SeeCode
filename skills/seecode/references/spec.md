@@ -1,6 +1,8 @@
 # Spec envelope and patching
 
 **Shared fields (every type)**
+- `style`: `illustrated` | `clean` | `sketchy`. This fork defaults architecture and flowchart to illustrated, other types to clean. Explicit spec style overrides project settings.
+- Graph box cards in illustrated style accept `description` (up to 500 characters) and render it in a gray band. Use numeric `tag` values for blue step badges. Other shapes keep compact labels and `sub`.
 - `type` (required).
 - `title`, `subtitle`, `eyebrow` (`""` hides it), `caption`.
 - `motion`: `auto` | `none` | `reveal` | `trace` | `step` | `loop`.

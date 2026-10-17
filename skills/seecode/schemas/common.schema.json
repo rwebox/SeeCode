@@ -135,7 +135,8 @@
     "style": {
       "enum": [
         "clean",
-        "sketchy"
+        "sketchy",
+        "illustrated"
       ]
     },
     "watermark": {

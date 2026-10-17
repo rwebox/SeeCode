@@ -7,7 +7,7 @@ import { ICON_NAMES } from '../skills/seecode/scripts/lib/render/shared/icons.mj
 import { renderSpec } from '../skills/seecode/scripts/lib/render.mjs';
 
 const schema = (f) => JSON.parse(readFileSync(new URL(`../skills/seecode/schemas/${f}`, import.meta.url), 'utf8'));
-const graph = (nodes) => ({ type: 'architecture', title: 'Icons', nodes, edges: [] });
+const graph = (nodes) => ({ type: 'architecture', style: 'clean', title: 'Icons', nodes, edges: [] });
 const nodeW = (html, id) => Number(new RegExp(`data-sc-node="${id}"[\\s\\S]*?<rect class="n-box"[^>]*width="([\\d.]+)"`).exec(html)[1]);
 
 test('every schema offers exactly the icons that exist', () => {

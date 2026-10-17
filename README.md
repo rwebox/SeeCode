@@ -1,3 +1,21 @@
+## Illustrated style in this fork
+
+Flowcharts and architecture diagrams now default to an illustrated style inspired by the Windows monitoring reference: white canvas, light gray cards, bold sans-serif headings, blue numbered badges and large vector icons, gray explanation bands, black arrows and dashed groups. The icons are a vector adaptation, not generated artwork.
+
+Use `"style":"illustrated"` explicitly, or `"style":"clean"` / `"style":"sketchy"` for the earlier layouts. Other diagram types keep their original defaults. Project settings can override the default with `SC config set style clean`; `auto` restores the fork defaults. A spec's style takes precedence over project settings.
+
+For rectangular cards, use `tag` for an authored step number, `icon` for a built-in illustration, and `description` for up to 500 characters of wrapped explanatory text. Non-numeric tags remain text labels. Decision diamonds, terminals, I/O, state, table and class shapes keep their compact geometry; use `sub` on those shapes. Enlarged cards affect spacing, so check routing after changing styles.
+
+Try [the monitoring example](examples/styles/windows-monitoring.json):
+
+```powershell
+node skills/seecode/scripts/seecode.mjs render examples/styles/windows-monitoring.json
+```
+
+The HTML keeps Replay, Live/Still, focus/Esc, theme switching and export controls. Reduced-motion preferences remain respected. Standalone SVG exports retain the illustrated styling.
+
+---
+
 <h1 align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="branding/banner-transparent-dark.png">

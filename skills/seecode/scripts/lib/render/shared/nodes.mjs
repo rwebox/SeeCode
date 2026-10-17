@@ -14,6 +14,52 @@ const FTYPE = { size: 9, mono: true };
 const ROW_H = 18;
 const HEAD_H = 30;
 
+// Illustrated boxes reserve their own text metrics. Special shapes and the
+// other renderer families continue using the compact layout below.
+function cardWrap(value, width, options) {
+  return wrap(value, width, options).flatMap((line) => {
+    if (textWidth(line, options) <= width) return [line];
+    const lines = []; let part = '';
+    for (const char of line) {
+      if (part && textWidth(part + char, options) > width) { lines.push(part); part = ''; }
+      part += char;
+    }
+    if (part) lines.push(part);
+    return lines;
+  });
+}
+
+function sizeCard(n) {
+  n.w = 288;
+  n.badge = /^\d{1,2}$/.test(n.tag || '');
+  n.lines = cardWrap(n.label, n.w - (n.badge ? 78 : 32), { size: 17, weight: 700 });
+  n.cardHead = Math.max(56, n.lines.length * 23 + 24) + (n.tag && !n.badge ? 18 : 0);
+  n.descriptionLines = n.description || n.sub ? cardWrap(n.description || n.sub, n.w - 44, { size: 12 }) : [];
+  n.cardBand = n.descriptionLines.length ? n.descriptionLines.length * 17 + 20 : 0;
+  n.h = ceil4(n.cardHead + (hasIcon(n) ? 84 : 0) + n.cardBand + 12);
+  return n;
+}
+
+function drawCard(n, parts) {
+  const { x, y, w } = n;
+  let titleY = y + 32;
+  if (n.badge) {
+    parts.push(el('circle', { class: 'n-step-badge', cx: x + 30, cy: y + 29, r: 18 }));
+    parts.push(text({ class: 'n-step-number', x: x + 30, y: y + 36, 'text-anchor': 'middle' }, n.tag));
+  }
+  for (const line of n.lines) {
+    parts.push(text({ class: 'n-label', x: x + (n.badge ? 60 : 16), y: titleY }, line));
+    titleY += 23;
+  }
+  if (n.tag && !n.badge) parts.push(text({ class: 'n-tag', x: x + 16, y: titleY - 4 }, n.tag));
+  if (hasIcon(n)) parts.push(drawIcon(n.icon, x + w / 2 - 32, y + n.cardHead + 6, 64));
+  if (n.cardBand) {
+    const by = y + n.h - n.cardBand - 8;
+    parts.push(el('rect', { class: 'n-description-band', x: x + 8, y: by, width: w - 16, height: n.cardBand, rx: 5 }));
+    n.descriptionLines.forEach((line, i) => parts.push(text({ class: 'n-description', x: x + 22, y: by + 22 + i * 17 }, line)));
+  }
+}
+
 export const MIN_W = 112;
 export const MAX_W = 220;
 export const POINT_SHAPES = new Set(['decision', 'start', 'end']);
@@ -44,6 +90,7 @@ function tableRows(n) {
 // Measure a node: sets n.w, n.h, n.lines (wrapped label lines).
 export function sizeNode(n, { minW = MIN_W, maxW = MAX_W } = {}) {
   const shape = n.shape || 'box';
+  if (n.illustrated && shape === 'box') return sizeCard(n);
   if (shape === 'start' || shape === 'end') {
     n.w = n.h = shape === 'start' ? 20 : 24;
     n.lines = [];
@@ -183,6 +230,8 @@ export function drawNode(n, { step, extraClass = '', attrs = {} } = {}) {
     /* filled via .sh-start */
   } else if (n.shape === 'entity' || n.shape === 'class') {
     drawTable(n, parts);
+  } else if (n.illustrated && (n.shape || 'box') === 'box') {
+    drawCard(n, parts);
   } else {
     let top = n.y;
     if (n.tag) {
@@ -213,15 +262,16 @@ export function drawNode(n, { step, extraClass = '', attrs = {} } = {}) {
   if (n.change === 'added') parts.push(text({ class: 'n-change', x: n.x + n.w - 8, y: n.y - 5, 'text-anchor': 'end' }, '+ NEW'));
   if (n.change === 'removed') parts.push(text({ class: 'n-change', x: n.x + n.w - 8, y: n.y - 5, 'text-anchor': 'end' }, '− REMOVED'));
   if (n.change === 'changed') parts.push(text({ class: 'n-change', x: n.x + n.w - 8, y: n.y - 5, 'text-anchor': 'end' }, '~ CHANGED'));
-  const cls = ['sc-node', `k-${kind}`, `sh-${n.shape || 'box'}`, n.change ? `k-change ch-${n.change}` : '', extraClass].filter(Boolean).join(' ');
+  const cls = ['sc-node', n.illustrated ? 'sc-card' : '', `k-${kind}`, `sh-${n.shape || 'box'}`, n.change ? `k-change ch-${n.change}` : '', extraClass].filter(Boolean).join(' ');
   return el('g', {
     class: cls,
     'data-sc-node': n.id,
+    'data-sc-description': n.illustrated ? n.description || n.sub : undefined,
     'data-sc-step': step,
     style: step !== undefined ? `--step:${step}` : undefined,
     tabindex: 0,
     role: 'group',
-    'aria-label': [n.label || n.shape, n.sub].filter(Boolean).join(', '),
+    'aria-label': [n.label || n.shape, n.description || n.sub].filter(Boolean).join(', '),
     ...attrs,
   }, parts);
 }

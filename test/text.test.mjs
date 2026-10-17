@@ -26,7 +26,7 @@ test('CJK punctuation never starts a line; opening brackets never end one', () =
 });
 
 test('a long Chinese node label wraps inside the 220px node cap', () => {
-  const r = renderSpec({ type: 'architecture', title: '中文', nodes: [{ id: 'a', label: '这是一个很长的中文节点标签用来测试自动换行', row: 0, col: 0 }], edges: [] });
+  const r = renderSpec({ type: 'architecture', title: '中文', style: 'clean', nodes: [{ id: 'a', label: '这是一个很长的中文节点标签用来测试自动换行', row: 0, col: 0 }], edges: [] });
   const w = Number(/data-sc-node="a"[\s\S]*?<rect[^>]*width="([\d.]+)"/.exec(r.html)[1]);
   assert.ok(w <= 220, `node is ${w}px wide`);
 });
