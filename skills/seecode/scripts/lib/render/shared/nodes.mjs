@@ -52,9 +52,21 @@ function drawCard(n, parts) {
     titleY += 23;
   }
   if (n.tag && !n.badge) parts.push(text({ class: 'n-tag', x: x + 16, y: titleY - 4 }, n.tag));
-  if (hasIcon(n)) parts.push(drawIcon(n.icon, x + w / 2 - 32, y + n.cardHead + 6, 64));
+  if (hasIcon(n)) {
+    if (n.comic) {
+      const dots = [];
+      for (const left of [x + 22, x + w - 54]) {
+        for (let r = 0; r < 7; r++) for (let c = 0; c < 4; c++) {
+          dots.push(el('circle', { cx: left + c * 8 + (r % 2 ? 2 : 0), cy: y + n.cardHead + 12 + r * 8, r: 1 }));
+        }
+      }
+      parts.push(el('g', { class: 'n-comic-dots', 'aria-hidden': 'true' }, dots));
+    }
+    parts.push(drawIcon(n.icon, x + w / 2 - 32, y + n.cardHead + 6, 64));
+  }
   if (n.cardBand) {
     const by = y + n.h - n.cardBand - 8;
+    if (n.comic) parts.push(el('path', { class: 'n-comic-tail', d: `M${x + 30},${by + 1} L${x + 34},${by - 6} L${x + 42},${by + 1} Z`, 'aria-hidden': 'true' }));
     parts.push(el('rect', { class: 'n-description-band', x: x + 8, y: by, width: w - 16, height: n.cardBand, rx: 5 }));
     n.descriptionLines.forEach((line, i) => parts.push(text({ class: 'n-description', x: x + 22, y: by + 22 + i * 17 }, line)));
   }
@@ -163,6 +175,9 @@ export function fieldY(n, name) {
 
 function outline(n, cls) {
   const { x, y, w, h } = n;
+  if (n.comic && (n.shape || 'box') === 'box') {
+    return el('rect', { class: cls, x, y, width: w - 4, height: h - 4, rx: 3 });
+  }
   switch (n.shape) {
     case 'decision':
       return el('path', { class: cls, d: `M${x + w / 2},${y} L${x + w},${y + h / 2} L${x + w / 2},${y + h} L${x},${y + h / 2} Z` });
@@ -222,6 +237,8 @@ function drawTable(n, parts) {
 export function drawNode(n, { step, extraClass = '', attrs = {} } = {}) {
   const kind = normalizeKind(n);
   const parts = [];
+  // Keep the offset shadow inside the node's measured routing bounds.
+  if (n.comic) parts.push(el('rect', { class: 'n-comic-shadow', x: n.x + 4, y: n.y + 4, width: n.w - 4, height: n.h - 4, rx: 3, 'aria-hidden': 'true' }));
   if (n.shape !== 'start' && n.shape !== 'end') parts.push(outline(n, 'n-mask'));
   parts.push(outline(n, 'n-box'));
   const cx = n.x + n.w / 2;

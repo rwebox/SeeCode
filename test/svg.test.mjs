@@ -15,7 +15,7 @@ for (const ex of exampleSpecs().filter((x) => ['architecture', 'sequence', 'bar'
     assert.doesNotMatch(light.slice(0, light.indexOf(">")), /data-sc-motion=/, "svg tag has no motion attribute");
     assert.match(light, /<title id="[^"]+-title">/);
     assert.match(light, / width="\d+(\.\d+)?" height="\d+(\.\d+)?"/);
-    assert.match(light, ex.type === 'architecture' ? /--sc-paper:#ffffff/ : /--sc-paper:#f6f5f1/);
+    assert.match(light, ex.type === 'architecture' ? /--sc-paper:#fff7e5/ : /--sc-paper:#f6f5f1/);
     assert.match(dark, /--sc-paper:#1a1a1a/);
     // well-formed enough for XML consumers: no raw "&" or "<" inside the style block
     const style = light.match(/<style>([\s\S]*?)<\/style>/)[1];

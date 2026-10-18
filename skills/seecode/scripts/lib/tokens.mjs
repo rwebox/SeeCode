@@ -43,6 +43,8 @@ export const SKINS = {
   },
 };
 
+const COMIC_PALETTE = { paper: '#fff7e5', 'paper-2': '#f4dfaa', ink: '#202c35', 'ink-strong': '#14212a', muted: '#48535a', soft: '#637079', accent: '#a4362b', link: '#195d85', 'accent-tint': '#f9e1d4', node: '#fffdf5' };
+
 const ILLUSTRATED_PALETTE = { paper: '#ffffff', 'paper-2': '#e5e5e5', ink: '#111111', 'ink-strong': '#000000', muted: '#333333', soft: '#666666', accent: '#0070c9', link: '#0065b5', 'accent-tint': '#e2f0fc', node: '#f1f1f1' };
 
 // Font stacks live in CSS variables so a brand profile can swap typefaces
@@ -85,7 +87,7 @@ function applyBrand(base, roles) {
 // The resolved light and dark palettes for a skin + brand (terminal has one
 // palette, used for both). Renderers that pick colours by contrast use these.
 export function themePalettes({ skin = 'light', brand = {}, style = 'clean' } = {}) {
-  const base = { ...(SKINS[skin] || SKINS.light), ...(style === 'illustrated' && skin === 'light' ? ILLUSTRATED_PALETTE : {}) };
+  const base = { ...(SKINS[skin] || SKINS.light), ...(skin === 'light' ? style === 'european-comic' ? COMIC_PALETTE : style === 'illustrated' ? ILLUSTRATED_PALETTE : {} : {}) };
   const { dark: darkBrand, light: lightBrand, fonts, ...flat } = brand || {};
   const light = applyBrand(base, lightBrand || flat);
   if (skin === 'terminal') return { light, dark: light };
@@ -106,7 +108,7 @@ function onFillVars(slot) {
 export function skinCss({ skin = 'light', brand = {}, style = 'clean' } = {}) {
   const { fonts } = brand || {};
   const type = fontStacks(fonts);
-  if (style === 'illustrated' && !fonts?.sans) type['font-sans'] = "Arial, 'Helvetica Neue', system-ui, sans-serif";
+  if (['illustrated', 'european-comic'].includes(style) && !fonts?.sans) type['font-sans'] = "Arial, 'Helvetica Neue', system-ui, sans-serif";
   const pal = themePalettes({ skin, brand, style });
   const badgeInk = (accent) => contrast('#000000', accent) > contrast('#ffffff', accent) ? '#000000' : '#ffffff';
   const light = { ...pal.light, 'badge-ink': badgeInk(pal.light.accent), ...onFillVars(1), ...type };

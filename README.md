@@ -1,6 +1,16 @@
+## European comic style
+
+This fork now defaults architecture and flowchart diagrams to `"style":"european-comic"`: warm paper, dark ink outlines, red step medallions, blue vector icons, offset panel shadows, printed dots around illustrations, and speech-tail caption bands. This is a general bande dessinée-inspired treatment, with no artist imitation or external image assets. Descriptions stay readable and special shapes keep their geometry.
+
+Explicit `"style":"illustrated"`, `"style":"clean"`, and `"style":"sketchy"` keep their earlier appearance. `SC config set style european-comic` selects it in settings; `auto` now chooses comic for architecture/flowchart and clean for other types. A spec's explicit choice still takes precedence. Dark and terminal themes retain their high-contrast palettes; brand colors remain respected.
+
+Try `node skills/seecode/scripts/seecode.mjs render examples/styles/windows-monitoring-comic.json`.
+
+---
+
 ## Illustrated style in this fork
 
-Flowcharts and architecture diagrams now default to an illustrated style inspired by the Windows monitoring reference: white canvas, light gray cards, bold sans-serif headings, blue numbered badges and large vector icons, gray explanation bands, black arrows and dashed groups. The icons are a vector adaptation, not generated artwork.
+Select `"style":"illustrated"` for the original illustrated style inspired by the Windows monitoring reference: white canvas, light gray cards, bold sans-serif headings, blue numbered badges and large vector icons, gray explanation bands, black arrows and dashed groups. The icons are a vector adaptation, not generated artwork.
 
 Use `"style":"illustrated"` explicitly, or `"style":"clean"` / `"style":"sketchy"` for the earlier layouts. Other diagram types keep their original defaults. Project settings can override the default with `SC config set style clean`; `auto` restores the fork defaults. A spec's style takes precedence over project settings.
 

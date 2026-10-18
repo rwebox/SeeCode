@@ -3,8 +3,33 @@
 export function resolveStyle(spec = {}, settings = {}) {
   const style = spec.style ?? settings.style;
   if (style && style !== 'auto') return style;
-  return ['architecture', 'flowchart'].includes(spec.type) ? 'illustrated' : 'clean';
+  return ['architecture', 'flowchart'].includes(spec.type) ? 'european-comic' : 'clean';
 }
+
+export const isCardStyle = (style) => ['illustrated', 'european-comic'].includes(style);
+
+// Bande dessinée-inspired accents, scoped to the SVG so standalone exports
+// keep the same ink, panel and printed-dot treatment. No remote assets.
+export const COMIC_CSS = `
+.sc-svg.sc-european-comic .sc-card .n-box{stroke-width:2.2;stroke-linejoin:round}
+.sc-svg.sc-european-comic .sc-card.k-focal .n-box{stroke-width:2.4}
+.sc-svg.sc-european-comic .n-comic-shadow{fill:var(--sc-ink);opacity:.82}
+.sc-svg.sc-european-comic .n-comic-dots{fill:var(--sc-link);opacity:.24;pointer-events:none}
+.sc-svg.sc-european-comic .sc-card .n-icon{stroke:var(--sc-link);stroke-width:1.65}
+.sc-svg.sc-european-comic .sc-card .n-icon rect,.sc-svg.sc-european-comic .sc-card .n-icon ellipse{fill:var(--sc-paper-2)}
+.sc-svg.sc-european-comic .n-description-band,.sc-svg.sc-european-comic .n-comic-tail{fill:var(--sc-paper-2);stroke:var(--sc-ink);stroke-width:1.15;stroke-linejoin:round}
+.sc-svg.sc-european-comic .n-step-badge{stroke:var(--sc-ink);stroke-width:1.4}
+.sc-svg.sc-european-comic .e-line{stroke-width:2}
+.sc-svg.sc-european-comic .g-box{stroke-width:1.5}
+.sc-svg.sc-european-comic .sc-legend .n-box{stroke-width:2.2}
+`;
+
+export const COMIC_VIEWER_CSS = `
+.sc-comic-page .sc-title{display:inline-block;background:var(--sc-paper-2);border:2px solid var(--sc-ink);box-shadow:4px 4px 0 var(--sc-ink);padding:12px 16px;letter-spacing:-.025em}
+.sc-comic-page .sc-eyebrow{color:var(--sc-accent);font-family:var(--sc-font-sans);font-weight:700;letter-spacing:.12em}
+.sc-comic-page .sc-caption{border:1.5px solid var(--sc-ink);box-shadow:3px 3px 0 var(--sc-ink);background:var(--sc-paper-2);border-radius:2px}
+.sc-comic-page .sc-btn,.sc-comic-page .sc-search{border:1px solid var(--sc-ink);background:var(--sc-node);border-radius:3px}
+`;
 
 export const ILLUSTRATED_CSS = `
 .sc-svg.sc-illustrated .sc-card .n-box{fill:var(--sc-node);stroke:var(--sc-ink);stroke-width:1.2}

@@ -8,7 +8,7 @@ import { textWidth } from '../skills/seecode/scripts/lib/text.mjs';
 import { skinCss } from '../skills/seecode/scripts/lib/tokens.mjs';
 import { contrast } from '../skills/seecode/scripts/lib/color.mjs';
 
-const spec = { type: 'flowchart', nodes: [{ id: 'a', label: 'Read event logs', tag: '3', icon: 'document', description: 'Keep server, time, provider, event ID and message.' }] };
+const spec = { type: 'flowchart', style: 'illustrated', nodes: [{ id: 'a', label: 'Read event logs', tag: '3', icon: 'document', description: 'Keep server, time, provider, event ID and message.' }] };
 
 test('style precedence is shared by graph layout, HTML and exported SVG', () => {
   const r = renderSpec(spec);
@@ -25,7 +25,7 @@ test('style precedence is shared by graph layout, HTML and exported SVG', () => 
   assert.match(svg, /#[\w-]+\.sc-svg\.sc-illustrated \.n-description-band/);
   assert.doesNotMatch(svg, /#[\w-]+ \.sc-illustrated/);
   assert.match(svgFromHtml(r.html, { theme: 'dark' }), /--sc-paper:#1a1a1a/);
-  const compact = { ...spec, nodes: [{ id: 'a', label: 'Read logs', tag: '3' }] };
+  const compact = { type: spec.type, nodes: [{ id: 'a', label: 'Read logs', tag: '3' }] };
   const clean = renderSpec(compact, { settings: { style: 'clean' } });
   assert.doesNotMatch(clean.html, /class="sc-svg sc-illustrated"/);
   const override = renderSpec({ ...compact, style: 'illustrated' }, { settings: { style: 'clean' } });

@@ -2,7 +2,7 @@
 // deployment, high-level, state, er, db-schema, uml-class, swimlane,
 // architecture-delta, it-state, medallion, dp-integration. Claude places nodes on a coarse grid (row/col);
 // this file turns that into exact geometry, routes, labels and motion.
-import { resolveStyle } from '../../style.mjs';
+import { resolveStyle, isCardStyle } from '../../style.mjs';
 import { el, text, roundedPath } from '../../svg.mjs';
 import { textWidth, ceil4 } from '../../text.mjs';
 import { sizeNode, drawNode, normalizeKind, fieldY } from '../shared/nodes.mjs';
@@ -136,14 +136,15 @@ function autoPlace(nodes, edges, dir, info) {
 }
 
 export function render(input, { settings = {} } = {}) {
-  const illustrated = resolveStyle(input, settings) === 'illustrated';
+  const style = resolveStyle(input, settings);
+  const illustrated = isCardStyle(style);
   const spec = input.stages ? fromStages(input) : input;
   const problems = [];
   const info = [];
   const dir = spec.dir || (spec.type === 'flowchart' || spec.variant === 'vertical' ? 'TB' : 'LR');
   const laneIdx = new Map((spec.lanes || []).map((l, i) => [typeof l === 'string' ? l : l.id, i]));
   const nodes = spec.nodes.map((n) => {
-    const o = { ...n, illustrated: illustrated && (!n.shape || n.shape === 'box') && !DEFAULT_SHAPE[spec.type], kind: normalizeKind(n), shape: n.shape || DEFAULT_SHAPE[spec.type] || 'box' };
+    const o = { ...n, comic: style === 'european-comic' && (!n.shape || n.shape === 'box') && !DEFAULT_SHAPE[spec.type], illustrated: illustrated && (!n.shape || n.shape === 'box') && !DEFAULT_SHAPE[spec.type], kind: normalizeKind(n), shape: n.shape || DEFAULT_SHAPE[spec.type] || 'box' };
     if (o.lane !== undefined && o.row === undefined) o.row = laneIdx.get(o.lane) ?? 0;
     return o;
   });
@@ -152,7 +153,7 @@ export function render(input, { settings = {} } = {}) {
       if (n.shape === 'start' || n.shape === 'end') n.label = n.shape === 'start' ? 'Start' : 'End';
       else problems.push({ code: 'E_SPEC', at: `nodes[${i}].label`, msg: 'is required', fix: 'add a label (only start/end shapes may omit it)' });
     }
-    if (n.description !== undefined && !n.illustrated) problems.push({ code: 'E_DESCRIPTION', at: `nodes[${i}].description`, msg: 'description needs an illustrated box', fix: 'use style:illustrated with shape:box, or use a short sub instead' });
+    if (n.description !== undefined && !n.illustrated) problems.push({ code: 'E_DESCRIPTION', at: `nodes[${i}].description`, msg: 'description needs an illustrated or European comic box', fix: 'use style:illustrated or style:european-comic with shape:box, or use a short sub instead' });
     if (n.lane !== undefined && !laneIdx.has(n.lane)) problems.push({ code: 'E_LANE', at: `nodes[${i}]`, msg: `unknown lane "${n.lane}"`, fix: `use one of: ${[...laneIdx.keys()].join(', ')}` });
   });
   const ids = new Set();

@@ -136,7 +136,8 @@
       "enum": [
         "clean",
         "sketchy",
-        "illustrated"
+        "illustrated",
+        "european-comic"
       ]
     },
     "watermark": {
