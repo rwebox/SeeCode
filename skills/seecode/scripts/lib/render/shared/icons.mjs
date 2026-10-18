@@ -49,8 +49,8 @@ export const ICON_SHAPES = new Set(['box', 'state', 'terminal', 'io']);
 export const hasIcon = (n) => Boolean(n.icon && ICONS[n.icon] && ICON_SHAPES.has(n.shape || 'box'));
 
 // The icon drawn at (x, y), its top-left corner.
-export function drawIcon(name, x, y) {
-  const s = ICON_SIZE / 24;
+export function drawIcon(name, x, y, size = ICON_SIZE) {
+  const s = size / 24;
   return el('g', { class: 'n-icon', transform: `translate(${x} ${y}) scale(${s})`, 'aria-hidden': 'true' },
     ICONS[name].map(([tag, attrs]) => el(tag, attrs)));
 }

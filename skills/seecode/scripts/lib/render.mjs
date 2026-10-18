@@ -1,4 +1,5 @@
 // Spec → HTML pipeline used by `seecode.mjs render|validate`.
+import { resolveStyle } from './style.mjs';
 import { setWidthScale } from './text.mjs';
 import { readFileSync, writeFileSync, mkdirSync, renameSync } from 'node:fs';
 import { dirname, resolve, basename, extname, join } from 'node:path';
@@ -90,6 +91,7 @@ export function renderSpec(input, { specPath, settings = {} } = {}) {
   } catch (e) {
     return { ok: false, problems: [{ code: 'E_DATA', at: 'data', msg: e.message, fix: 'check the data file path and format' }] };
   }
+  resolved = { ...resolved, style: resolveStyle(spec, settings) };
   const motion = spec.motion || settings.motion || 'auto';
   const preset = resolvePreset(motion === 'auto' && info.defaultMotion ? info.defaultMotion : motion, info.family);
   let result;

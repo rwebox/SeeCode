@@ -1,0 +1,178 @@
+{
+  "type": "flowchart",
+  "title": "Nightly server monitoring",
+  "subtitle": "Automatic overnight checks, followed by a morning analyst review.",
+  "eyebrow": "",
+  "caption": "Next: confirm the root cause, fix the problem and ask users to verify. Replay restarts the flow; Esc clears a selection. System reduced-motion settings are respected.",
+  "skin": "light",
+  "fonts": "system",
+  "size": "wide",
+  "motion": "trace",
+  "dir": "TB",
+  "out": "windows-monitoring-illustrated.html",
+  "order": [
+    "start",
+    "connect",
+    "logs",
+    "filter",
+    "review"
+  ],
+  "groups": [
+    {
+      "id": "night",
+      "label": "Nightly automated job",
+      "style": "dashed"
+    },
+    {
+      "id": "morning",
+      "label": "Morning analyst review",
+      "style": "dashed"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "start",
+      "label": "Start nightly",
+      "tag": "1",
+      "icon": "clock",
+      "row": 0,
+      "col": 0,
+      "group": "night",
+      "description": "Run on schedule. Read since each log's last successful scan and report coverage gaps."
+    },
+    {
+      "id": "connect",
+      "label": "Connect to servers",
+      "tag": "2",
+      "icon": "server",
+      "row": 1,
+      "col": 0,
+      "group": "night",
+      "description": "Use permitted read access. Record unreachable servers and access failures."
+    },
+    {
+      "id": "logs",
+      "label": "Read event logs",
+      "tag": "3",
+      "icon": "document",
+      "row": 0,
+      "col": 1,
+      "group": "night",
+      "description": "Read System, Application and Security channels. Administrative Events is a combined view of underlying channels. Keep server, time, provider, event ID and message."
+    },
+    {
+      "id": "filter",
+      "label": "Select & filter",
+      "tag": "4",
+      "icon": "gear",
+      "focal": true,
+      "row": 1,
+      "col": 1,
+      "group": "night",
+      "description": "The automated script selects events, groups repeats and filters approved noise. Categories include Warning, Error, Critical and security audit rules. Retain evidence, unknown events and unusual spikes."
+    },
+    {
+      "id": "review",
+      "label": "Review morning email",
+      "tag": "5",
+      "icon": "mail",
+      "focal": true,
+      "row": 1,
+      "col": 2,
+      "group": "morning",
+      "description": "The morning server report contains selected events, affected servers, evidence and trends, next checks and scan failures. Review this information and decide what to investigate."
+    },
+    {
+      "id": "config",
+      "label": "Configuration",
+      "icon": "gear",
+      "kind": "input",
+      "row": 2,
+      "col": 0,
+      "description": "Configuration supplies the server list, schedule and approved noise rules."
+    },
+    {
+      "id": "archive",
+      "label": "Evidence archive",
+      "icon": "database",
+      "kind": "store",
+      "row": 2,
+      "col": 1,
+      "description": "Evidence archive retains raw evidence and repeat counts."
+    }
+  ],
+  "edges": [
+    [
+      "start",
+      "connect",
+      "",
+      "primary"
+    ],
+    [
+      "connect",
+      "logs",
+      "",
+      "primary"
+    ],
+    [
+      "logs",
+      "filter",
+      "",
+      "primary"
+    ],
+    [
+      "filter",
+      "review",
+      "Email report",
+      "primary"
+    ],
+    [
+      "config",
+      "connect",
+      "Settings"
+    ],
+    [
+      "filter",
+      "archive",
+      "Save evidence"
+    ]
+  ],
+  "evidence": [
+    {
+      "id": "start",
+      "file": "windows-monitoring-flowchart.png",
+      "note": "Run on schedule. Read since each log's last successful scan and report coverage gaps."
+    },
+    {
+      "id": "connect",
+      "file": "windows-monitoring-flowchart.png",
+      "note": "Use permitted read access. Record unreachable servers and access failures."
+    },
+    {
+      "id": "logs",
+      "file": "windows-monitoring-flowchart.png",
+      "note": "Read System, Application and Security channels. Administrative Events is a combined view of underlying channels. Keep server, time, provider, event ID and message."
+    },
+    {
+      "id": "filter",
+      "file": "windows-monitoring-flowchart.png",
+      "note": "The automated script selects events, groups repeats and filters approved noise. Categories include Warning, Error, Critical and security audit rules. Retain evidence, unknown events and unusual spikes."
+    },
+    {
+      "id": "review",
+      "file": "windows-monitoring-flowchart.png",
+      "note": "The morning server report contains selected events, affected servers, evidence and trends, next checks and scan failures. Review this information and decide what to investigate."
+    },
+    {
+      "id": "config",
+      "file": "windows-monitoring-flowchart.png",
+      "note": "Configuration supplies the server list, schedule and approved noise rules."
+    },
+    {
+      "id": "archive",
+      "file": "windows-monitoring-flowchart.png",
+      "note": "Evidence archive retains raw evidence and repeat counts."
+    }
+  ],
+  "style": "illustrated"
+}

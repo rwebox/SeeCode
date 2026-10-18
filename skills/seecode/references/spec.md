@@ -1,6 +1,8 @@
 # Spec envelope and patching
 
 **Shared fields (every type)**
+- `style`: `european-comic` | `illustrated` | `clean` | `sketchy`. This fork defaults architecture and flowchart to european-comic, other types to clean. Explicit spec style overrides project settings.
+- Graph box cards in illustrated or european-comic style accept `description` (up to 500 characters) and render it in a caption band. Use numeric `tag` values for step badges. Illustrated defaults use gray bands and blue badges; European comic defaults use warm bands and red badges. Themes and brand profiles can change these colors. Other shapes keep compact labels and `sub`.
 - `type` (required).
 - `title`, `subtitle`, `eyebrow` (`""` hides it), `caption`.
 - `motion`: `auto` | `none` | `reveal` | `trace` | `step` | `loop`.

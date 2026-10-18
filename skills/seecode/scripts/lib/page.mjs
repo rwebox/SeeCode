@@ -8,6 +8,7 @@ import { scopeCss, shortHash } from './scope.mjs';
 import { cleanFonts } from './config/config.mjs';
 import { watermarkOn, watermarkSvg, MARK, FAVICON } from './mark.mjs';
 import { MOTION_CSS, motionVars } from './motion.mjs';
+import { resolveStyle, isCardStyle, COMIC_CSS, COMIC_VIEWER_CSS, ILLUSTRATED_CSS, ILLUSTRATED_VIEWER_CSS } from './style.mjs';
 import { VIEWER_CSS } from './viewer/viewer.css.mjs';
 
 const CLIENT = readFileSync(fileURLToPath(new URL('./viewer/viewer.client.js', import.meta.url)), 'utf8');
@@ -25,6 +26,9 @@ const RTL = new Set(['ar', 'he', 'fa', 'ur', 'ps', 'yi', 'dv', 'ckb', 'sd', 'ug'
 export const isRtl = (lang) => RTL.has(String(lang || '').split('-')[0].toLowerCase());
 
 export function buildPage({ spec, result, preset, typeName, settings = {} }) {
+  const style = resolveStyle(spec, settings);
+  const illustrated = isCardStyle(style);
+  const comic = style === 'european-comic';
   const sketchy = (spec.style || settings.style) === 'sketchy';
   const mark = watermarkOn(spec, settings);
   const webFonts = webFontsOn(spec, settings);
@@ -40,7 +44,7 @@ export function buildPage({ spec, result, preset, typeName, settings = {} }) {
   const motionAttr = preset && preset !== 'none' ? preset : undefined;
   const interactive = result.graph && result.graph.nodes.length > 0;
   const svg = el('svg', {
-    class: `sc-svg${sketchy ? ' sc-sketchy' : ''}`,
+    class: `sc-svg${illustrated ? ' sc-illustrated' : ''}${comic ? ' sc-european-comic' : ''}${sketchy ? ' sc-sketchy' : ''}`,
     id: uid,
     xmlns: 'http://www.w3.org/2000/svg',
     'xmlns:xlink': mark ? 'http://www.w3.org/1999/xlink' : undefined,
@@ -100,10 +104,10 @@ ${webFonts ? `<link rel="preconnect" href="https://fonts.googleapis.com"><link r
 <link id="sc-fonts" rel="stylesheet" href="${esc(FONTS_HREF)}${sketchy ? '&amp;family=Kalam:wght@400;700' : ''}">` : ''}${(brandFonts.href || []).map((h) => `
 <link class="sc-brand-fonts" rel="stylesheet" href="${esc(h)}">`).join('')}${brandFonts.faces ? `
 <style id="sc-brand-faces">${brandFonts.faces}</style>` : ''}
-<style>${skinCss({ skin: spec.skin || settings.skin || 'light', brand })}
+<style>${skinCss({ skin: spec.skin || settings.skin || 'light', brand, style })}
 :root{--sc-max:${SIZE_MAX[spec.size || 'auto'] || 1200}px}
-${VIEWER_CSS}</style>
-<style id="sc-diagram-css">${DIAGRAM_CSS}${MOTION_CSS}</style>
+${VIEWER_CSS}${ILLUSTRATED_VIEWER_CSS}${COMIC_VIEWER_CSS}</style>
+<style id="sc-diagram-css">${DIAGRAM_CSS}${ILLUSTRATED_CSS}${COMIC_CSS}${MOTION_CSS}</style>
 <script type="text/plain" id="sc-token-names">${tokenNames}</script>
 <script type="application/json" id="sc-meta">${JSON.stringify({
     type: typeName,
@@ -112,7 +116,7 @@ ${VIEWER_CSS}</style>
     evidence: (spec.evidence || []).reduce((m, e) => ((m[e.id] = m[e.id] || []).push({ file: e.file, line: e.line, note: e.note }), m), {}),
   }).replace(/</g, '\\u003c')}</script>
 </head>
-<body>
+<body${illustrated ? ` class="sc-illustrated-page${comic ? ' sc-comic-page' : ''}"` : ''}>
 <main class="sc-page">
 <header class="sc-head">
 ${spec.eyebrow !== '' ? `<p class="sc-eyebrow">${esc(spec.eyebrow || typeName)}</p>` : ''}

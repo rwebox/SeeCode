@@ -114,11 +114,11 @@
     if (!n) return { id, label: id };
     const kind = ([...n.classList].find((c) => c.startsWith('k-') && c !== 'k-change') || 'k-backend').slice(2);
     const subEl = n.querySelector('.n-sub');
-    const tagEl = n.querySelector('.n-tag');
+    const tagEl = n.querySelector('.n-tag, .n-step-number');
     return {
       id,
       label: (n.getAttribute('aria-label') || id).split(',')[0],
-      sub: subEl ? subEl.textContent : '',
+      sub: n.getAttribute('data-sc-description') || (subEl ? subEl.textContent : ''),
       tag: tagEl ? tagEl.textContent : '',
       kind,
       group: (meta.groups || {})[id],
@@ -1104,9 +1104,10 @@
       const box = g.querySelector('.n-box');
       if (!box || !box.getBBox) return;
       const room = box.getBBox().width - 12;
-      g.querySelectorAll('text.n-label, text.n-sub').forEach((t) => {
-        if (room > 0 && t.getComputedTextLength() > room) {
-          t.setAttribute('textLength', room.toFixed(1));
+      g.querySelectorAll('text.n-label, text.n-sub, text.n-description').forEach((t) => {
+        const available = g.classList.contains('sc-card') ? box.getBBox().x + box.getBBox().width - Number(t.getAttribute('x')) - 16 : room;
+        if (available > 0 && t.getComputedTextLength() > available) {
+          t.setAttribute('textLength', available.toFixed(1));
           t.setAttribute('lengthAdjust', 'spacingAndGlyphs');
         }
       });

@@ -1,5 +1,5 @@
 // Design tokens and the shared diagram stylesheet.
-import { expandRoles, rgba } from './color.mjs';
+import { expandRoles, rgba, contrast } from './color.mjs';
 import { AXON_CSS } from './render/structure/axon.mjs';
 import { DETAIL_CSS } from './render/structure/iso-detail.mjs';
 import { OBJECT_CSS } from './render/structure/object.mjs';
@@ -19,7 +19,7 @@ export const SKINS = {
   light: {
     paper: '#f6f5f1', 'paper-2': '#eceae4', ink: '#1d2433', 'ink-strong': '#0b0f19',
     muted: '#4a5568', soft: '#8a93a6', rule: 'rgba(29,36,51,0.12)', 'rule-solid': '#c9ccd3',
-    accent: '#2f54eb', 'accent-tint': 'rgba(47,84,235,0.08)', link: '#0f7f81',
+    'badge-ink': '#ffffff', accent: '#2f54eb', 'accent-tint': 'rgba(47,84,235,0.08)', link: '#0f7f81',
     node: '#ffffff', 'store': 'rgba(29,36,51,0.05)', external: 'rgba(29,36,51,0.025)',
     'series-1': '#6b8f71', 'series-2': '#c08a3e', 'series-3': '#8a6fb0', 'series-4': '#b5604b', 'series-5': '#5f7f9e',
     'ax-shade': '#1d2433', 'ax-lift': '#ffffff', 'ax-screen': '#2b3040', 'ax-dark-edge': 'rgba(255,255,255,0)', 'ax-t-o': '0', 'ax-l-o': '0.07', 'ax-r-o': '0.16',
@@ -28,7 +28,7 @@ export const SKINS = {
   dark: {
     paper: '#1a1a1a', 'paper-2': '#222222', ink: '#e8e6e3', 'ink-strong': '#f7f6f4',
     muted: '#a9a6a1', soft: '#75726e', rule: 'rgba(232,230,227,0.12)', 'rule-solid': 'rgba(232,230,227,0.24)',
-    accent: '#7b93ff', 'accent-tint': 'rgba(123,147,255,0.14)', link: '#3cc6c4',
+    'badge-ink': '#000000', accent: '#7b93ff', 'accent-tint': 'rgba(123,147,255,0.14)', link: '#3cc6c4',
     node: '#202020', store: 'rgba(232,230,227,0.05)', external: 'rgba(232,230,227,0.025)',
     'series-1': '#8fb394', 'series-2': '#d9a95f', 'series-3': '#a993cc', 'series-4': '#d0806b', 'series-5': '#86a5c4',
     'ax-shade': '#000000', 'ax-lift': '#ffffff', 'ax-screen': '#07080b', 'ax-dark-edge': 'rgba(255,255,255,0.34)', 'ax-t-o': '0.06', 'ax-l-o': '0.2', 'ax-r-o': '0.42',
@@ -36,12 +36,16 @@ export const SKINS = {
   terminal: {
     paper: '#1a1a1a', 'paper-2': '#222222', ink: '#f2f2f2', 'ink-strong': '#ffffff',
     muted: '#9a9a9a', soft: '#5c5c5c', rule: 'rgba(242,242,242,0.10)', 'rule-solid': '#2b2b2b',
-    accent: '#39d98a', 'accent-tint': 'rgba(57,217,138,0.10)', link: '#5cc8ff',
+    'badge-ink': '#000000', accent: '#39d98a', 'accent-tint': 'rgba(57,217,138,0.10)', link: '#5cc8ff',
     node: '#202020', store: 'rgba(242,242,242,0.04)', external: 'rgba(242,242,242,0.02)',
     'series-1': '#39d98a', 'series-2': '#5cc8ff', 'series-3': '#f5c542', 'series-4': '#ff7a59', 'series-5': '#b48cff',
     'ax-shade': '#000000', 'ax-lift': '#ffffff', 'ax-screen': '#07080b', 'ax-dark-edge': 'rgba(255,255,255,0.34)', 'ax-t-o': '0.06', 'ax-l-o': '0.2', 'ax-r-o': '0.42',
   },
 };
+
+const COMIC_PALETTE = { paper: '#fff7e5', 'paper-2': '#f4dfaa', ink: '#202c35', 'ink-strong': '#14212a', muted: '#48535a', soft: '#637079', accent: '#a4362b', link: '#195d85', 'accent-tint': '#f9e1d4', node: '#fffdf5' };
+
+const ILLUSTRATED_PALETTE = { paper: '#ffffff', 'paper-2': '#e5e5e5', ink: '#111111', 'ink-strong': '#000000', muted: '#333333', soft: '#666666', accent: '#0070c9', link: '#0065b5', 'accent-tint': '#e2f0fc', node: '#f1f1f1' };
 
 // Font stacks live in CSS variables so a brand profile can swap typefaces
 // without touching the stylesheets. DEFAULT_FONTS are SeeCode's own.
@@ -82,8 +86,8 @@ function applyBrand(base, roles) {
 // brand's dark palette when it has one, else keeps just its accent family.
 // The resolved light and dark palettes for a skin + brand (terminal has one
 // palette, used for both). Renderers that pick colours by contrast use these.
-export function themePalettes({ skin = 'light', brand = {} } = {}) {
-  const base = SKINS[skin] || SKINS.light;
+export function themePalettes({ skin = 'light', brand = {}, style = 'clean' } = {}) {
+  const base = { ...(SKINS[skin] || SKINS.light), ...(skin === 'light' ? style === 'european-comic' ? COMIC_PALETTE : style === 'illustrated' ? ILLUSTRATED_PALETTE : {} : {}) };
   const { dark: darkBrand, light: lightBrand, fonts, ...flat } = brand || {};
   const light = applyBrand(base, lightBrand || flat);
   if (skin === 'terminal') return { light, dark: light };
@@ -101,12 +105,14 @@ function onFillVars(slot) {
   return Object.fromEntries(ON_FILL.map((v) => [`on-${v}`, ON_FILL_TEXT[v[slot]]]));
 }
 
-export function skinCss({ skin = 'light', brand = {} } = {}) {
+export function skinCss({ skin = 'light', brand = {}, style = 'clean' } = {}) {
   const { fonts } = brand || {};
   const type = fontStacks(fonts);
-  const pal = themePalettes({ skin, brand });
-  const light = { ...pal.light, ...onFillVars(1), ...type };
-  const dark = { ...pal.dark, ...onFillVars(2), ...type };
+  if (['illustrated', 'european-comic'].includes(style) && !fonts?.sans) type['font-sans'] = "Arial, 'Helvetica Neue', system-ui, sans-serif";
+  const pal = themePalettes({ skin, brand, style });
+  const badgeInk = (accent) => contrast('#000000', accent) > contrast('#ffffff', accent) ? '#000000' : '#ffffff';
+  const light = { ...pal.light, 'badge-ink': badgeInk(pal.light.accent), ...onFillVars(1), ...type };
+  const dark = { ...pal.dark, 'badge-ink': badgeInk(pal.dark.accent), ...onFillVars(2), ...type };
   if (skin === 'terminal') {
     return `:root{${vars(light)}}`;
   }

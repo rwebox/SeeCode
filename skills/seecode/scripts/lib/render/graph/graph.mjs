@@ -2,6 +2,7 @@
 // deployment, high-level, state, er, db-schema, uml-class, swimlane,
 // architecture-delta, it-state, medallion, dp-integration. Claude places nodes on a coarse grid (row/col);
 // this file turns that into exact geometry, routes, labels and motion.
+import { resolveStyle, isCardStyle } from '../../style.mjs';
 import { el, text, roundedPath } from '../../svg.mjs';
 import { textWidth, ceil4 } from '../../text.mjs';
 import { sizeNode, drawNode, normalizeKind, fieldY } from '../shared/nodes.mjs';
@@ -134,14 +135,16 @@ function autoPlace(nodes, edges, dir, info) {
   info.push({ code: 'I_AUTOPLACED', msg: `auto-placed ${missing.length} node(s)`, fix: 'add row/col to control layout' });
 }
 
-export function render(input) {
+export function render(input, { settings = {} } = {}) {
+  const style = resolveStyle(input, settings);
+  const illustrated = isCardStyle(style);
   const spec = input.stages ? fromStages(input) : input;
   const problems = [];
   const info = [];
   const dir = spec.dir || (spec.type === 'flowchart' || spec.variant === 'vertical' ? 'TB' : 'LR');
   const laneIdx = new Map((spec.lanes || []).map((l, i) => [typeof l === 'string' ? l : l.id, i]));
   const nodes = spec.nodes.map((n) => {
-    const o = { ...n, kind: normalizeKind(n), shape: n.shape || DEFAULT_SHAPE[spec.type] || 'box' };
+    const o = { ...n, comic: style === 'european-comic' && (!n.shape || n.shape === 'box') && !DEFAULT_SHAPE[spec.type], illustrated: illustrated && (!n.shape || n.shape === 'box') && !DEFAULT_SHAPE[spec.type], kind: normalizeKind(n), shape: n.shape || DEFAULT_SHAPE[spec.type] || 'box' };
     if (o.lane !== undefined && o.row === undefined) o.row = laneIdx.get(o.lane) ?? 0;
     return o;
   });
@@ -150,6 +153,7 @@ export function render(input) {
       if (n.shape === 'start' || n.shape === 'end') n.label = n.shape === 'start' ? 'Start' : 'End';
       else problems.push({ code: 'E_SPEC', at: `nodes[${i}].label`, msg: 'is required', fix: 'add a label (only start/end shapes may omit it)' });
     }
+    if (n.description !== undefined && !n.illustrated) problems.push({ code: 'E_DESCRIPTION', at: `nodes[${i}].description`, msg: 'description needs an illustrated or European comic box', fix: 'use style:illustrated or style:european-comic with shape:box, or use a short sub instead' });
     if (n.lane !== undefined && !laneIdx.has(n.lane)) problems.push({ code: 'E_LANE', at: `nodes[${i}]`, msg: `unknown lane "${n.lane}"`, fix: `use one of: ${[...laneIdx.keys()].join(', ')}` });
   });
   const ids = new Set();
@@ -255,7 +259,7 @@ export function render(input) {
     const ms = [...g.members].map((id) => byId.get(id)).filter(Boolean);
     if (!ms.length) continue;
     const x0 = Math.min(...ms.map((n) => n.x)) - GROUP_PAD;
-    const y0 = Math.min(...ms.map((n) => n.y)) - GROUP_TOP;
+    const y0 = Math.min(...ms.map((n) => n.y)) - (illustrated ? 36 : GROUP_TOP);
     const x1 = Math.max(...ms.map((n) => n.x + n.w)) + GROUP_PAD;
     const y1 = Math.max(...ms.map((n) => n.y + n.h)) + GROUP_PAD;
     const box = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
@@ -265,9 +269,12 @@ export function render(input) {
         problems.push({ code: 'W_GROUP_OVERLAP', at: `groups.${g.id}`, msg: `"${n.id}" sits inside group "${g.id}"`, fix: `add "${n.id}" to the group or move it outside the group's rows/cols` });
       }
     }
-    const label = (g.label || g.id).toUpperCase();
-    const lw = ceil4(textWidth(label, { size: 7, mono: true, tracking: 0.16 }) + 12);
-    groups.push({ ...g, box, label, labelBox: { x: box.x + 12, y: box.y - 6, w: lw, h: 12 } });
+    const label = illustrated ? (g.label || g.id) : (g.label || g.id).toUpperCase();
+    const measured = textWidth(label, illustrated ? { size: 15, weight: 700 } : { size: 7, mono: true, tracking: 0.16 }) * (illustrated ? 1.12 : 1);
+    const labelSize = illustrated ? Math.min(15, 15 * (box.w - 40) / Math.max(1, measured)) : 7;
+    const lw = ceil4((illustrated ? measured * labelSize / 15 : measured) + 16);
+    const lh = illustrated ? 24 : 12;
+    groups.push({ ...g, box, label, labelSize, labelBox: { x: box.x + 12, y: box.y - lh / 2, w: lw, h: lh } });
   }
 
   // Labels.
@@ -331,7 +338,7 @@ export function render(input) {
   const pts = [];
   lanes.forEach((l) => pts.push([-laneGutter - 8, l.y0], [lastX + 24, l.y1]));
   nodes.forEach((n) => pts.push([n.x, n.y], [n.x + n.w, n.y + n.h]));
-  groups.forEach((g) => pts.push([g.box.x, g.labelBox.y], [g.box.x + g.box.w, g.box.y + g.box.h]));
+  groups.forEach((g) => pts.push([g.box.x, g.labelBox.y], [g.box.x + g.box.w, g.box.y + g.box.h], [g.labelBox.x + g.labelBox.w, g.labelBox.y + g.labelBox.h]));
   edges.forEach((e) => (e.route || []).forEach((p) => pts.push([p.x, p.y])));
   placed.forEach((b) => pts.push([b.x, b.y], [b.x + b.w, b.y + b.h]));
   const minX = Math.min(...pts.map((p) => p[0])) - 24;
@@ -372,8 +379,8 @@ export function render(input) {
     laneSvg,
     el('g', { class: 'sc-groups' }, groups.map((g) => el('g', { class: 'sc-group sc-fade', 'data-sc-group': g.id, 'data-sc-step': 1, style: '--step:0' }, [
       el('rect', { class: `g-box${g.style === 'dashed' ? ' g-dashed' : ''}`, x: g.box.x, y: g.box.y, width: g.box.w, height: g.box.h, rx: 8 }),
-      el('rect', { class: 'g-label-bg', x: g.labelBox.x, y: g.labelBox.y, width: g.labelBox.w, height: 12 }),
-      text({ class: 'g-label', x: g.labelBox.x + 6, y: g.labelBox.y + 9 }, g.label),
+      el('rect', { class: 'g-label-bg', x: g.labelBox.x, y: g.labelBox.y, width: g.labelBox.w, height: g.labelBox.h }),
+      text({ class: 'g-label', x: g.labelBox.x + 6, y: g.labelBox.y + (illustrated ? 17 : 9), style: illustrated ? `font-size:${g.labelSize}px` : undefined }, g.label),
     ]))),
     el('g', { class: 'sc-edges' }, edges.filter((e) => e.route).map((e) => drawEdge(e, { step: e.step, labelBoxAt: e.labelBox }))),
     // the flow token travels under the node layer, so it slips behind boxes instead of over them

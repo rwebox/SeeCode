@@ -7,6 +7,7 @@ import { join, dirname, resolve } from 'node:path';
 
 export const DEFAULTS = {
   skin: 'light',
+  style: 'auto',
   motion: 'auto',
   exportFormats: ['html', 'png'],
   size: 'auto',
@@ -150,6 +151,7 @@ function coerce(v) {
 
 export function set(cwd, key, value, { global = false } = {}) {
   if (!KNOWN.has(key)) throw new Error(`unknown setting "${key}" (known: ${[...KNOWN].join(', ')})`);
+  if (key === 'style' && !['auto', 'clean', 'sketchy', 'illustrated', 'european-comic'].includes(value)) throw new Error('style must be one of: auto, clean, sketchy, illustrated, european-comic');
   if (key === 'fonts' && !FONTS.includes(value)) throw new Error(`fonts must be one of: ${FONTS.join(', ')}`);
   const p = paths(cwd);
   const file = global ? p.global : p.project;

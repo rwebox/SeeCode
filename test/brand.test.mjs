@@ -155,8 +155,8 @@ test('brand fonts lead the stacks and load in the page', async () => {
   const html = renderSpec({ type: 'architecture', title: 'T', nodes: [{ id: 'a', label: 'A', row: 0, col: 0 }] }, { settings: { brand: { fonts: { sans: { family: 'Inter' }, href: ['https://fonts.googleapis.com/css2?family=Inter&display=swap'] } } } }).html;
   assert.match(html, /--sc-font-sans:'Inter', 'IBM Plex Sans'/);
   assert.match(html, /<link class="sc-brand-fonts" rel="stylesheet" href="https:\/\/fonts\.googleapis\.com\/css2\?family=Inter&amp;display=swap">/);
-  // the default stack is untouched without a brand
+  // the illustrated default uses system sans without a brand
   const plain = renderSpec({ type: 'architecture', title: 'T', nodes: [{ id: 'a', label: 'A', row: 0, col: 0 }] }).html;
-  assert.match(plain, /--sc-font-sans:'IBM Plex Sans'/);
+  assert.match(plain, /--sc-font-sans:Arial/);
   assert.doesNotMatch(plain, /<link class="sc-brand-fonts"/);
 });
